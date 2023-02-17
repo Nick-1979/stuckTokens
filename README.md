@@ -1,5 +1,5 @@
 # Stuck Tokens !
-A simple script to find total number of tokens which is mistakenly directly transferred to the stash ids of nomination pools
+A simple script to find the total number of tokens which is mistakenly directly transferred to the stash ids of nomination pools
 
 # To run
 `npm`
