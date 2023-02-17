@@ -1,4 +1,4 @@
-/** A simple script to find total number of tokens which is mistakenly directly transferred to the nomination pools' stash ids */
+/** A simple script to find total number of tokens which is mistakenly directly transferred to the stash ids of nomination pools */
 
 import { bnToU8a, stringToU8a, u8aConcat } from '@polkadot/util';
 import { ApiPromise, WsProvider } from '@polkadot/api';
