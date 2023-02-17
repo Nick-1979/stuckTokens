@@ -16,7 +16,7 @@ async function getStuckBalance(api, endpoint) {
         const stashId = createPoolStashId(api, poolId);
         const bal = await api.derive.balances?.all(stashId);
         total = total.add(bal.availableBalance);
-        console.log(`poolId:${poolId} stuckBalance:${api.createType('Balance', bal.availableBalance).toHuman()}`);
+        console.log(`pool id: ${poolId} stuck balance: ${api.createType('Balance', bal.availableBalance).toHuman()}`);
     }
     return total;
 }
