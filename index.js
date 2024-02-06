@@ -16,7 +16,7 @@ function getTotalUnlocking(api, unbonding) {
     return total;
 }
 
-function calculateTotalUnbondedTokens(api, unbonding) {
+function calculateTotalUnbondedTokens(unbonding) {
     if (unbonding.isNone) {
         return BN_ZERO;
     }
@@ -48,7 +48,7 @@ async function getStuckBalance(api, endpoint) {
         if (!stashIdTransferable.isZero()) {
             const stashIdAccount = await api.derive.staking.account(stashId);
             const subPools = await api.query.nominationPools.subPoolsStorage(poolId);
-            const subPoolsStorageSum = calculateTotalUnbondedTokens(api, subPools)
+            const subPoolsStorageSum = calculateTotalUnbondedTokens(subPools)
 
             console.log(`pool id: ${poolId} 
         Active: ${api.createType('Balance', stashIdAccount.stakingLedger.active).toHuman()}
