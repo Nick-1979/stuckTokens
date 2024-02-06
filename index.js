@@ -2,10 +2,39 @@
 
 import { bnToU8a, stringToU8a, u8aConcat } from '@polkadot/util';
 import { ApiPromise, WsProvider } from '@polkadot/api';
-import { BN_ZERO } from '@polkadot/util';
+import { BN, BN_ZERO } from '@polkadot/util';
 
 const EMPTY_H256 = new Uint8Array(32);
 const MOD_PREFIX = stringToU8a('modl');
+
+function getTotalUnlocking(api, unbonding) {
+    let total = BN_ZERO;
+    for (let i = 0; i < unbonding?.length; i++) {
+
+        total = total.add(new BN(String(unbonding[i].value)))
+    }
+    return total;
+}
+
+function calculateTotalUnbondedTokens(api, unbonding) {
+    if (unbonding.isNone) {
+        return BN_ZERO;
+    }
+
+    const { noEra, withEra } = unbonding.unwrap();
+
+    const totalUnbonded = [...noEra.values(), ...withEra.values()]
+        .reduce((acc, value) => {
+            if ('balance' in value) {
+                return acc.add(value.balance);
+            } else {
+                return acc.add(value);
+            }
+        }, BN_ZERO);
+
+    return totalUnbonded;
+}
+
 
 async function getStuckBalance(api, endpoint) {
     const lastPoolId = await api.query.nominationPools.lastPoolId()
@@ -14,9 +43,25 @@ async function getStuckBalance(api, endpoint) {
 
     for (let poolId = 1; poolId <= lastPoolId; poolId++) {
         const stashId = createPoolStashId(api, poolId);
-        const bal = await api.derive.balances?.all(stashId);
-        total = total.add(bal.availableBalance);
-        !bal.availableBalance.isZero()&& console.log(`pool id: ${poolId} stuck balance: ${api.createType('Balance', bal.availableBalance).toHuman()}`);
+        const stashIdBalance = await api.derive.balances?.all(stashId);
+        const stashIdTransferable = stashIdBalance.freeBalance.add(stashIdBalance.reservedBalance);
+        if (!stashIdTransferable.isZero()) {
+            const stashIdAccount = await api.derive.staking.account(stashId);
+            const subPools = await api.query.nominationPools.subPoolsStorage(poolId);
+            const subPoolsStorageSum = calculateTotalUnbondedTokens(api, subPools)
+
+            console.log(`pool id: ${poolId} 
+        Active: ${api.createType('Balance', stashIdAccount.stakingLedger.active).toHuman()}
+        Unbonding(subPoolsStorage): ${api.createType('Balance', subPoolsStorageSum).toHuman()}
+        Pool's total balance: ${api.createType('Balance', new BN(String(stashIdAccount.stakingLedger.active)).add(subPoolsStorageSum)).toHuman()}`)
+
+
+            total = total.add(stashIdBalance.availableBalance);
+            console.log(`
+        Stash Id transferable balance: ${api.createType('Balance', stashIdBalance.availableBalance).toHuman()}
+        Stash Id total balance: ${api.createType('Balance', stashIdTransferable).toHuman()}
+        `);
+        }
     }
     return total;
 }
@@ -49,9 +94,9 @@ async function main() {
 
     const totalKSMstuck = await getStuckBalance(apiToKusama, kusamaEndpoint);
 
-    console.log('==================Final Results=======================');
-    console.log(`Total DOT stuck is ${apiToPolkadot.createType('Balance', totalDOTstuck).toHuman()}`);
-    console.log(`Total KSM stuck is ${apiToKusama.createType('Balance', totalKSMstuck).toHuman()}`);
+    // console.log('==================Final Results=======================');
+    // console.log(`Total DOT stuck is ${apiToPolkadot.createType('Balance', totalDOTstuck).toHuman()}`);
+    // console.log(`Total KSM stuck is ${apiToKusama.createType('Balance', totalKSMstuck).toHuman()}`);
 
 }
 main();
