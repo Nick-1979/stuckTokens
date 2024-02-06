@@ -9,6 +9,7 @@ A simple script to find the total number of tokens which may mistakenly directly
 
 ## Run snapshot on Feb 6:
 
+------------------Polkadot Pools----------------------
 
 #Total pool numbers: 231
 
