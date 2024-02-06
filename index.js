@@ -49,20 +49,18 @@ async function getStuckBalance(api, endpoint) {
             const poolTotalBalance = new BN(String(stashIdAccount.stakingLedger.active)).add(subPoolsStorageSum);
 
             if (!stashIdTotal.eq(poolTotalBalance)) {
-                const def=stashIdTotal.sub(poolTotalBalance);
-                console.log(`pool id: ${poolId} 
+                const def = stashIdTotal.sub(poolTotalBalance);
+                console.log(`\n pool id: ${poolId}\n 
                    Active: ${api.createType('Balance', stashIdAccount.stakingLedger.active).toHuman()}
                    Unbonding(subPoolsStorage): ${api.createType('Balance', subPoolsStorageSum).toHuman()}
                    Pool's total balance: ${api.createType('Balance', poolTotalBalance).toHuman()}`)
 
-
-                total = total.add(stashIdTransferable);
                 console.log(`
                    Stash Id's transferable balance: ${api.createType('Balance', stashIdTransferable).toHuman()}
                    Stash Id's total balance: ${api.createType('Balance', stashIdTotal).toHuman()}\n
                    Stash Id's total - Pool's total: ${api.createType('Balance', def).toHuman()}\n\n`);
 
-                   total=total.add(def);
+                total = total.add(def);
             }
         }
     }
