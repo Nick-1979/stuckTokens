@@ -23,16 +23,10 @@ function calculateTotalUnbondedTokens(unbonding) {
 
     const { noEra, withEra } = unbonding.unwrap();
 
-    const totalUnbonded = [...noEra.values(), ...withEra.values()]
-        .reduce((acc, value) => {
-            if ('balance' in value) {
-                return acc.add(value.balance);
-            } else {
-                return acc.add(value);
-            }
-        }, BN_ZERO);
+    const totalUnbonded = [...withEra.values()]
+        .reduce((acc, value) => acc.add(value.balance), BN_ZERO);
 
-    return totalUnbonded;
+    return totalUnbonded.add(noEra.balance);
 }
 
 
