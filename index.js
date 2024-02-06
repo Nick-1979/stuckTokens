@@ -44,19 +44,26 @@ async function getStuckBalance(api, endpoint) {
         if (!stashIdTransferable.isZero()) {
             const stashIdAccount = await api.derive.staking.account(stashId);
             const subPools = await api.query.nominationPools.subPoolsStorage(poolId);
-            const subPoolsStorageSum = calculateTotalUnbondedTokens(subPools)
+            const subPoolsStorageSum = calculateTotalUnbondedTokens(subPools);
 
-            console.log(`pool id: ${poolId} 
-        Active: ${api.createType('Balance', stashIdAccount.stakingLedger.active).toHuman()}
-        Unbonding(subPoolsStorage): ${api.createType('Balance', subPoolsStorageSum).toHuman()}
-        Pool's total balance: ${api.createType('Balance', new BN(String(stashIdAccount.stakingLedger.active)).add(subPoolsStorageSum)).toHuman()}`)
+            const poolTotalBalance = new BN(String(stashIdAccount.stakingLedger.active)).add(subPoolsStorageSum);
+
+            if (!stashIdTotal.eq(poolTotalBalance)) {
+                const def=stashIdTotal.sub(poolTotalBalance);
+                console.log(`pool id: ${poolId} 
+                   Active: ${api.createType('Balance', stashIdAccount.stakingLedger.active).toHuman()}
+                   Unbonding(subPoolsStorage): ${api.createType('Balance', subPoolsStorageSum).toHuman()}
+                   Pool's total balance: ${api.createType('Balance', poolTotalBalance).toHuman()}`)
 
 
-            total = total.add(stashIdTransferable);
-            console.log(`
-        Stash Id transferable balance: ${api.createType('Balance', stashIdTransferable).toHuman()}
-        Stash Id total balance: ${api.createType('Balance',  stashIdTotal).toHuman()}
-        `);
+                total = total.add(stashIdTransferable);
+                console.log(`
+                   Stash Id's transferable balance: ${api.createType('Balance', stashIdTransferable).toHuman()}
+                   Stash Id's total balance: ${api.createType('Balance', stashIdTotal).toHuman()}\n
+                   Stash Id's total - Pool's total: ${api.createType('Balance', def).toHuman()}\n\n`);
+
+                   total=total.add(def);
+            }
         }
     }
     return total;
@@ -90,9 +97,9 @@ async function main() {
 
     const totalKSMstuck = await getStuckBalance(apiToKusama, kusamaEndpoint);
 
-    // console.log('==================Final Results=======================');
-    // console.log(`Total DOT stuck is ${apiToPolkadot.createType('Balance', totalDOTstuck).toHuman()}`);
-    // console.log(`Total KSM stuck is ${apiToKusama.createType('Balance', totalKSMstuck).toHuman()}`);
+    console.log('==================Final Results=======================');
+    console.log(`Total DOT stuck is ${apiToPolkadot.createType('Balance', totalDOTstuck).toHuman()}`);
+    console.log(`Total KSM stuck is ${apiToKusama.createType('Balance', totalKSMstuck).toHuman()}`);
 
 }
 main();
