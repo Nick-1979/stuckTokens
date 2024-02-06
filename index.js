@@ -43,8 +43,10 @@ async function getStuckBalance(api, endpoint) {
 
     for (let poolId = 1; poolId <= lastPoolId; poolId++) {
         const stashId = createPoolStashId(api, poolId);
-        const stashIdBalance = await api.derive.balances?.all(stashId);
-        const stashIdTransferable = stashIdBalance.freeBalance.add(stashIdBalance.reservedBalance);
+        const stashIdBalance = await api.query.system.account(stashId)
+        const stashIdTransferable = stashIdBalance.data.free.sub(stashIdBalance.data.frozen);
+        const stashIdTotal = stashIdBalance.data.free.add(stashIdBalance.data.reserved);
+
         if (!stashIdTransferable.isZero()) {
             const stashIdAccount = await api.derive.staking.account(stashId);
             const subPools = await api.query.nominationPools.subPoolsStorage(poolId);
@@ -56,10 +58,10 @@ async function getStuckBalance(api, endpoint) {
         Pool's total balance: ${api.createType('Balance', new BN(String(stashIdAccount.stakingLedger.active)).add(subPoolsStorageSum)).toHuman()}`)
 
 
-            total = total.add(stashIdBalance.availableBalance);
+            total = total.add(stashIdTransferable);
             console.log(`
-        Stash Id transferable balance: ${api.createType('Balance', stashIdBalance.availableBalance).toHuman()}
-        Stash Id total balance: ${api.createType('Balance', stashIdTransferable).toHuman()}
+        Stash Id transferable balance: ${api.createType('Balance', stashIdTransferable).toHuman()}
+        Stash Id total balance: ${api.createType('Balance',  stashIdTotal).toHuman()}
         `);
         }
     }
